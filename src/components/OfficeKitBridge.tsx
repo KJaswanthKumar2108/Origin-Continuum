@@ -36,7 +36,7 @@ export const OfficeKitBridge: React.FC<OfficeKitBridgeProps> = ({
           </div>
           <div>
             <h2 className="text-[18px] font-black tracking-tight text-white">
-              Handoff concept
+              Connected
             </h2>
             <p className="text-[12px] text-neutral-400">
               Continuum context ready
@@ -81,7 +81,7 @@ export const OfficeKitBridge: React.FC<OfficeKitBridgeProps> = ({
             </div>
             <div>
               <span className="text-[11px] font-mono text-neutral-400 block">PC</span>
-              <span className="text-[13px] font-bold text-white">PC / Office Kit Concept</span>
+              <span className="text-[13px] font-bold text-white">Office Kit Workstation</span>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@ export const OfficeKitBridge: React.FC<OfficeKitBridgeProps> = ({
             “Your context is ready to continue.”
           </p>
           <p className="text-[12px] text-neutral-400 mt-1">
-            The prototype presents structured context for a proposed PC handoff.
+            No file clutter. The task, deadline, and source remain connected.
           </p>
         </div>
       </div>

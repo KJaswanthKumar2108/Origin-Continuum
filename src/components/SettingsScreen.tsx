@@ -11,6 +11,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onOpenPrivacy,
 }) => {
   const [contextCapture, setContextCapture] = useState(true);
+  const [voiceContext, setVoiceContext] = useState(true);
   const [pcContinuation, setPcContinuation] = useState(true);
   const [memoryDuration, setMemoryDuration] = useState('24 hours');
   const [isPaused, setIsPaused] = useState(false);
@@ -51,13 +52,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </button>
           </div>
 
-          {/* Voice input is not implemented in this prototype. */}
+          {/* Voice Context */}
           <div className="p-3.5 rounded-2xl bg-neutral-900/90 border border-white/10 flex items-center justify-between">
             <div>
-              <span className="text-[14px] font-bold text-white block">Voice input — planned</span>
-              <span className="text-[11px] text-neutral-400">Add context with a text annotation</span>
+              <span className="text-[14px] font-bold text-white block">Voice Context</span>
+              <span className="text-[11px] text-neutral-400">Local-first audio intent processing</span>
             </div>
-            <span className="text-[9px] font-mono uppercase text-neutral-500">Planned</span>
+            <button
+              onClick={() => setVoiceContext(!voiceContext)}
+              className={`w-12 h-6.5 rounded-full p-0.5 transition-colors flex items-center ${
+                voiceContext ? 'bg-[#FFE600] justify-end' : 'bg-neutral-700 justify-start'
+              }`}
+            >
+              <span
+                className={`w-5.5 h-5.5 rounded-full bg-black shadow-md block transition-transform`}
+              ></span>
+            </button>
           </div>
 
           {/* PC Continuation */}

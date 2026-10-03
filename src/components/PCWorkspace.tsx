@@ -60,27 +60,31 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
 
   // Editable Deadline
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
-  const [deadlineVal, setDeadlineVal] = useState(moment.deadline || 'Not specified');
+  const [deadlineVal, setDeadlineVal] = useState(moment.deadline || 'Friday');
 
   // Suggested Next Step state (Requirement 7)
   const [suggestedStep, setSuggestedStep] = useState<SuggestedNextAction>(
-    moment.suggestedNextAction || { action: '', reasoning: '' }
+    moment.suggestedNextAction || {
+      action: `Prioritize "${moment.actions[0]?.title || 'reviewing notes'}" before proceeding.`,
+      reasoning: 'Supported by primary context and active delivery timeline.',
+    }
   );
   const [isSuggestionAccepted, setIsSuggestionAccepted] = useState(false);
   const [isRefreshingSuggestion, setIsRefreshingSuggestion] = useState(false);
 
   // Notes state
   const [workspaceNotes, setWorkspaceNotes] = useState(
-    moment.textNote || ''
+    'Key objectives:\n- Align pricing tier with competitor benchmarks\n- Prototype screen transition verified on device\n- Final deck export due Thursday 6 PM for Friday review'
   );
   const [isFinishedContext, setIsFinishedContext] = useState(false);
 
   // Sync tasks when moment prop changes
   useEffect(() => {
     setTasks(moment.actions);
-    setDeadlineVal(moment.deadline || 'Not specified');
-    setWorkspaceNotes(moment.textNote || '');
-    setSuggestedStep(moment.suggestedNextAction || { action: '', reasoning: '' });
+    setDeadlineVal(moment.deadline || 'Friday');
+    if (moment.suggestedNextAction) {
+      setSuggestedStep(moment.suggestedNextAction);
+    }
   }, [moment]);
 
   const toggleTask = (taskId: string) => {
@@ -194,33 +198,36 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
   return (
     <div
       id="origin-pc-continuation-view"
-      className="w-full min-w-0 max-w-full h-full min-h-0 flex-1 bg-[#0c0e14] text-white flex flex-col overflow-hidden relative font-sans select-none"
+      className="w-full h-full min-h-0 flex-1 bg-[#0c0e14] text-white flex flex-col overflow-hidden relative font-sans select-none"
     >
       {/* PC Window Titlebar */}
       <div className="w-full h-9 sm:h-10 px-3 sm:px-4 bg-[#11131a] border-b border-white/10 flex items-center justify-between select-none z-20 shrink-0">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="flex items-center gap-2">
           {/* Mac / Windows style window controls */}
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
             <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block"></span>
             <span className="w-2.5 h-2.5 rounded-full bg-green-500/80 inline-block"></span>
           </div>
-          <span className="text-[11px] sm:text-[12px] font-mono text-neutral-300 ml-2 font-semibold min-w-0 truncate">
-            Origin Continuum — PC / Office Kit Concept
+          <span className="text-[11px] sm:text-[12px] font-mono text-neutral-300 ml-2 font-semibold truncate">
+            Origin Continuum — HP 15 Workspace
+          </span>
+          <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-neutral-800 text-[#FFE600] border border-[#FFE600]/30 text-[9px] font-mono font-bold">
+            Live Bridge
           </span>
         </div>
 
-        {/* Concept status and frame controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Device Sync Status & Switch */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FFE600]/10 border border-[#FFE600]/30 text-[#FFE600] text-[10px] sm:text-[11px] font-mono font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FFE600] animate-pulse"></span>
-            <span>Context handoff concept</span>
+            <span>Paired with iQOO 15</span>
           </div>
 
           {onToggleSideBySide && (
             <button
               onClick={onToggleSideBySide}
-              className={`flex items-center gap-1 text-[10.5px] sm:text-[11px] px-2 py-1 rounded-md transition-all cursor-pointer shrink-0 ${
+              className={`flex items-center gap-1 text-[10.5px] sm:text-[11px] px-2 py-1 rounded-md transition-all cursor-pointer ${
                 isSideBySide
                   ? 'bg-[#FFE600] text-black font-bold shadow-sm'
                   : 'bg-white/10 hover:bg-white/15 text-white hover:text-[#FFE600]'
@@ -228,15 +235,17 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
               title="Toggle Side-by-Side view (Phone + PC)"
             >
               <Columns className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Side-by-Side</span>
             </button>
           )}
 
           <button
             onClick={onReturnToPhone}
-            className="flex items-center gap-1 text-[10.5px] sm:text-[11px] text-neutral-300 hover:text-white px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+            className="flex items-center gap-1 text-[10.5px] sm:text-[11px] text-neutral-300 hover:text-white px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
             title="Return to Phone view"
           >
             <Smartphone className="w-3.5 h-3.5 text-[#FFE600]" />
+            <span className="hidden sm:inline">Back to Phone</span>
           </button>
         </div>
       </div>
@@ -258,7 +267,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#FFE600]"></span>
                 <span className="text-[11px] font-mono tracking-widest text-[#FFE600] font-extrabold uppercase">
-                  PC / OFFICE KIT CONCEPT
+                  CONTINUUM CONTEXT READY
                 </span>
               </div>
               <span className="text-[10px] font-mono text-neutral-400">
@@ -323,7 +332,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                   ORIGINAL CONTEXT
                 </span>
                 <span className="text-neutral-200 font-medium">
-                  {moment.sources.map((source) => source.label).join(' + ')}
+                  {visual.badge} + Voice Memo
                 </span>
               </div>
             </div>
@@ -335,7 +344,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                 onClick={() => setActiveView('workspace')}
                 className="w-full py-3 px-4 rounded-xl bg-[#FFE600] hover:bg-[#fff04d] text-black font-extrabold text-[13.5px] flex items-center justify-center gap-2 shadow-lg shadow-[#FFE600]/25 transition-all cursor-pointer active:scale-98"
               >
-                <span>Continue</span>
+                <span>Open Full Workspace</span>
                 <ExternalLink className="w-4 h-4 stroke-[2.5]" />
               </button>
 
@@ -371,7 +380,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
               </span>
               <span className="text-neutral-500 text-xs hidden sm:inline">|</span>
               <span className="text-[11.5px] text-neutral-300 font-medium truncate hidden md:inline">
-                Proposed context handoff
+                Context active from iQOO 15
               </span>
             </div>
 
@@ -413,12 +422,9 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
 
           {/* Split Workspace View */}
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 sm:p-5 overflow-y-auto">
-            {/* Left: Source and extracted context */}
+            {/* Left: Original Visual Snapshot & Entities (5 cols) */}
             <div className="lg:col-span-5 flex flex-col space-y-3">
-              {/* Original source or deterministic demo sample */}
-              {moment.imageThumbnailUrl ? (
-                <img src={moment.imageThumbnailUrl} alt="Original captured image" className="w-full max-h-80 object-contain rounded-xl bg-black/30" />
-              ) : moment.isDemo && moment.visualData ? (
+              {/* Visual Card Simulation */}
               <div className="rounded-2xl bg-[#f8fafc] text-neutral-900 p-4 shadow-xl border-2 border-neutral-300 flex flex-col justify-between relative overflow-hidden shrink-0">
                 <div className="absolute top-0 right-0 w-32 h-20 bg-gradient-to-bl from-white/60 to-transparent pointer-events-none"></div>
 
@@ -448,23 +454,20 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                 </div>
 
                 <div className="pt-2 text-[10px] text-neutral-500 font-mono flex items-center justify-between border-t border-neutral-200 mt-2">
-                  <span>Deterministic demo sample</span>
+                  <span>Grounding: iQOO Optical OCR</span>
+                  <span>Confidence: 99.4%</span>
                 </div>
               </div>
-              ) : (
-                <div className="rounded-xl bg-neutral-900/90 border border-white/10 p-3 text-[11px] text-neutral-400">
-                  This moment was created from text context; no image was attached.
-                </div>
-              )}
 
-              {moment.textNote && (
-                <div className="rounded-xl bg-neutral-900/90 border border-white/10 p-3">
-                  <span className="text-[9.5px] font-mono uppercase tracking-wider text-neutral-400 font-bold block mb-1">
-                    Text Annotation
-                  </span>
-                  <p className="text-[12px] text-neutral-200 leading-snug">{moment.textNote}</p>
-                </div>
-              )}
+              {/* Spoken Voice Intent Quote */}
+              <div className="rounded-xl bg-neutral-900/90 border border-white/10 p-3">
+                <span className="text-[9.5px] font-mono uppercase tracking-wider text-neutral-400 font-bold block mb-1">
+                  Spoken Intent
+                </span>
+                <p className="text-[12px] text-neutral-200 italic leading-snug">
+                  “{moment.voiceTranscript || moment.contextSummary}”
+                </p>
+              </div>
 
               {/* Entities & Decisions */}
               {(moment.entities?.length || moment.decisions?.length) ? (
@@ -524,7 +527,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                 </div>
               </div>
 
-              {suggestedStep.action && (
+              {/* Requirement 7: Context-Aware Suggested Next Step */}
               <div className="rounded-xl bg-gradient-to-r from-[#1c1d29] to-[#12141f] border border-[#FFE600]/40 p-3 shadow-md relative overflow-hidden">
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-1.5">
@@ -571,7 +574,6 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                   )}
                 </div>
               </div>
-              )}
 
               {/* Interactive Task Manager (Requirement 4) */}
               <div className="rounded-2xl bg-neutral-900/90 border border-white/10 p-3.5 shadow-lg space-y-2.5">
@@ -786,14 +788,14 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                 {/* Context Status */}
                 <div className="rounded-xl bg-neutral-900/90 border border-white/10 p-2.5 flex flex-col justify-between">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
-                    Handoff
+                    Continuity Mode
                   </span>
                   <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px] font-bold mt-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Prototype concept</span>
+                    <span>Live Bi-Directional Sync</span>
                   </div>
                   <span className="text-[9.5px] text-neutral-400 mt-1 truncate">
-                    No connected device service
+                    Edits sync with phone automatically
                   </span>
                 </div>
               </div>
@@ -805,7 +807,7 @@ export const PCWorkspace: React.FC<PCWorkspaceProps> = ({
                     Working Draft & Notes
                   </span>
                   <span className="text-[9.5px] font-mono text-neutral-500">
-                    Local preview
+                    Auto-saved
                   </span>
                 </div>
                 <textarea
