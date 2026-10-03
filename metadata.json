@@ -1,0 +1,11 @@
+{
+  "name": "Origin Continuum",
+  "description": "iQOO/OriginOS-inspired mobile concept prototype transferring context from real-world moments directly to PC workspace.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
