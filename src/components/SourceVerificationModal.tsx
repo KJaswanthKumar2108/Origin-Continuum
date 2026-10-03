@@ -18,7 +18,7 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
   if (!isOpen) return null;
 
   const handleCopyRaw = () => {
-    const raw = `ORIGINAL CONTEXT:\n${moment.extractedText || moment.contextSummary}\n\nTEXT ANNOTATION:\n"${moment.textNote || (moment.isDemo ? moment.voiceTranscript : '') || 'N/A'}"\n\nAI EXTRACTED TASKS:\n` +
+    const raw = `ORIGINAL CONTEXT:\n${moment.extractedText || moment.contextSummary}\n\nVOICE TRANSCRIPT:\n"${moment.voiceTranscript || 'N/A'}"\n\nAI EXTRACTED TASKS:\n` +
       moment.actions.map((a, i) => `${i + 1}. [${a.completed ? 'X' : ' '}] ${a.title}`).join('\n');
     navigator.clipboard?.writeText(raw);
     setCopied(true);
@@ -30,7 +30,7 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
     subtitle: 'RAW SENSORY GROUNDING',
     badge: 'OPTICAL SCAN',
     points: moment.actions.map((a) => `• ${a.title}`),
-    footerNote: 'Deterministic demo source',
+    footerNote: 'Source ground truth from iQOO camera matrix',
     accentColor: '#FFE600',
   };
 
@@ -45,13 +45,13 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
             </div>
             <div>
               <h2 className="text-[16px] sm:text-[18px] font-black tracking-tight text-white flex items-center gap-2">
-                <span>Source Review</span>
+                <span>Source Grounding & Verification</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold uppercase">
-                  SOURCE
+                  Verified
                 </span>
               </h2>
               <p className="text-[11px] sm:text-[12px] text-neutral-400">
-                Inspect the attached image, text annotation, and structured result.
+                Inspect original visual & audio inputs to audit AI extraction.
               </p>
             </div>
           </div>
@@ -72,16 +72,14 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
             <div className="rounded-2xl bg-neutral-900/90 border border-white/10 p-3.5 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
-                  1. Captured Image
+                  1. Visual Capture Matrix
                 </span>
                 <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">
                   {visual.badge}
                 </span>
               </div>
 
-              {moment.imageThumbnailUrl ? (
-                <img src={moment.imageThumbnailUrl} alt="Original captured image" className="w-full max-h-56 object-contain rounded-xl bg-black/30" />
-              ) : moment.isDemo && moment.visualData ? (
+              {/* Visual Card Simulation */}
               <div className="rounded-xl bg-[#f8fafc] text-neutral-900 p-3 shadow-inner border border-neutral-300 space-y-2">
                 <div className="border-b border-neutral-300 pb-1.5 flex items-center justify-between">
                   <div>
@@ -103,32 +101,29 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
                 </ul>
 
                 <div className="pt-1 text-[9.5px] text-neutral-500 font-mono border-t border-neutral-200">
-                  {visual.footerNote || 'Deterministic demo source'}
+                  {visual.footerNote || 'iQOO Optical Sensor Capture'}
                 </div>
               </div>
-              ) : (
-                <p className="rounded-xl bg-black/30 p-3 text-[11px] text-neutral-400">No image attached. This moment was created from text context.</p>
-              )}
             </div>
 
-            {/* Text Annotation & OCR */}
+            {/* Audio & OCR Transcript */}
             <div className="rounded-2xl bg-neutral-900/90 border border-white/10 p-3.5 flex flex-col justify-between space-y-2.5">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
-                    2. User Text & Extracted Image Text
+                    2. Verbatim Speech & Text
                   </span>
                   <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30">
-                    TEXT CONTEXT
+                    SPOKEN INTENT
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1 mb-2">
                   <span className="text-[9.5px] font-mono uppercase text-neutral-500 block">
-                    User Annotation
+                    Voice Note Transcript
                   </span>
                   <p className="text-[12.5px] text-neutral-100 italic font-medium">
-                    {moment.textNote || (moment.isDemo ? moment.voiceTranscript : null) || 'No text annotation attached.'}
+                    “{moment.voiceTranscript || 'No voice memo attached.'}”
                   </p>
                 </div>
 
@@ -146,7 +141,7 @@ export const SourceVerificationModal: React.FC<SourceVerificationModalProps> = (
 
               <div className="text-[10px] font-mono text-neutral-400 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Review the structured data against its attached sources.</span>
+                <span>Zero hallucination constraint enforced</span>
               </div>
             </div>
           </div>

@@ -27,14 +27,13 @@ export interface ContinuumMoment {
   timestamp: string;
   createdAt: number;
   sources: {
-    type: 'whiteboard' | 'document' | 'screen' | 'voice' | 'camera' | 'text';
+    type: 'whiteboard' | 'document' | 'screen' | 'voice' | 'camera';
     label: string;
   }[];
   actions: TaskItem[];
   deadline?: string;
   contextSummary: string;
   voiceTranscript?: string;
-  textNote?: string;
   extractedText?: string;
   entities?: string[];
   decisions?: string[];

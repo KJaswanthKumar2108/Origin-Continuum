@@ -23,7 +23,7 @@ export const FinalScreen: React.FC<FinalScreenProps> = ({
           ORIGIN CONTINUUM
         </h1>
         <p className="text-[14.5px] font-bold text-[#FFE600] mt-1 tracking-tight">
-          Your Context. Your Control.
+          Context that follows your workflow.
         </p>
 
         {/* 4-Step Chain */}
@@ -32,7 +32,7 @@ export const FinalScreen: React.FC<FinalScreenProps> = ({
           <span className="text-[#FFE600] text-[10px]">→</span>
           <span className="text-white">UNDERSTAND</span>
           <span className="text-[#FFE600] text-[10px]">→</span>
-          <span className="text-white">STRUCTURE</span>
+          <span className="text-white">REMEMBER</span>
           <span className="text-[#FFE600] text-[10px]">→</span>
           <span className="text-emerald-400 font-extrabold">CONTINUE</span>
         </div>
