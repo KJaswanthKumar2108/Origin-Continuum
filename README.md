@@ -75,6 +75,8 @@ npm run dev
 
 Open `http://localhost:3000`. Use **Capture** to take or upload an image, add an optional text annotation, and choose **Understand**. If the OpenRouter key, model access, or account limits prevent processing, the app reports an error and offers retry; **Demo Mode** remains available for a deterministic sample.
 
+For deployment checks, `GET /api/health` reports the active provider, model, and whether the server has a configured key. It never returns the key itself.
+
 ## Validation
 
 ```bash

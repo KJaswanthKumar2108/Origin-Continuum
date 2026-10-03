@@ -60,6 +60,15 @@ async function requestOpenRouter(body: unknown): Promise<any> {
   return data;
 }
 
+app.get('/api/health', (_req, res) => {
+  return res.json({
+    status: 'ok',
+    provider: 'openrouter',
+    model: OPENROUTER_MODEL,
+    configured: Boolean(process.env.OPENROUTER_API_KEY),
+  });
+});
+
 const momentSchema = {
   type: 'object',
   properties: {
