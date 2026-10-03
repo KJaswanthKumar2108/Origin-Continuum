@@ -62,7 +62,7 @@ export const UnderstandingScreen: React.FC<UnderstandingScreenProps> = ({
 
         const { ok, data } = await request.promise;
         if (!ok || !data.success || !data.isAIGenerated || !data.moment) {
-          throw new Error(data.error || 'Gemini did not return a Continuum Moment.');
+          throw new Error(data.error || 'OpenRouter did not return a valid Continuum Moment. Please retry.');
         }
         if (!isMounted) return;
 
@@ -100,7 +100,7 @@ export const UnderstandingScreen: React.FC<UnderstandingScreenProps> = ({
         setPhase(4);
       } catch (error) {
         if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Gemini could not process this moment.');
+          setErrorMessage(error instanceof Error ? error.message : 'OpenRouter could not process this moment.');
         }
       } finally {
         window.clearInterval(phaseTimer);
@@ -145,7 +145,7 @@ export const UnderstandingScreen: React.FC<UnderstandingScreenProps> = ({
             )}
             <div className="rounded-xl border border-[#FFE600]/50 bg-neutral-900 p-3">
               <div className="flex items-center gap-2 text-[9px] font-mono uppercase text-emerald-300 mb-2">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Gemini result
+                <CheckCircle2 className="w-3.5 h-3.5" /> OpenRouter result
               </div>
               <h2 className="text-[16px] font-bold text-white">{generatedMoment.title}</h2>
               <p className="text-[11px] text-neutral-300 mt-1">{generatedMoment.contextSummary}</p>
