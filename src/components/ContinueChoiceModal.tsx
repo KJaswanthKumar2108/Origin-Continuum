@@ -89,7 +89,7 @@ export const ContinueChoiceModal: React.FC<ContinueChoiceModalProps> = ({
         <div
           id="btn-choice-side-by-side"
           onClick={onSelectSideBySide}
-          className="group p-3.5 rounded-2xl bg-gradient-to-br from-[#1a1d22] to-[#11131a] border border-white/12 hover:border-[#FFE600]/70 hover:bg-[#1e222c] transition-all cursor-pointer shadow-md flex items-center justify-between"
+          className="hidden lg:flex group p-3.5 rounded-2xl bg-gradient-to-br from-[#1a1d22] to-[#11131a] border border-white/12 hover:border-[#FFE600]/70 hover:bg-[#1e222c] transition-all cursor-pointer shadow-md items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 group-hover:border-[#FFE600]/60 flex items-center justify-center text-[#FFE600] shrink-0 transition-colors">

@@ -23,16 +23,16 @@ export const WhyContinuumScreen: React.FC<WhyContinuumScreenProps> = ({ onBack }
           WHY CONTINUUM?
         </span>
         <h1 className="text-[21px] font-black tracking-tight text-white mt-1 leading-tight uppercase">
-          Your devices are connected.<br />Your context should be too.
+          Don’t transfer what you were doing.<br />Transfer what you need to continue.
         </h1>
         <div className="mt-2.5 p-3 rounded-2xl bg-[#FFE600]/10 border border-[#FFE600]/30">
           <p className="text-[12.5px] font-semibold text-[#FFE600] italic leading-snug">
-            “iQOO already connects the devices. Origin Continuum proposes connecting the context.”
+            “Origin Continuum structures meaningful context for a proposed phone-to-PC handoff.”
           </p>
         </div>
       </div>
 
-      {/* The 4-Step Core Sequence: Capture → Understand → Remember → Continue */}
+      {/* The 4-Step Core Sequence: Capture → Understand → Structure → Continue */}
       <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1b1e15] to-[#11131a] border-2 border-[#FFE600] shadow-xl mb-4">
         <span className="text-[11px] font-mono uppercase tracking-wider text-[#FFE600] font-extrabold block mb-3">
           HOW CONTEXT FLOWS
@@ -64,7 +64,7 @@ export const WhyContinuumScreen: React.FC<WhyContinuumScreenProps> = ({ onBack }
               3
             </span>
             <div>
-              <span className="font-bold text-white block">REMEMBER</span>
+              <span className="font-bold text-white block">STRUCTURE</span>
               <span className="text-neutral-400 text-[11.5px]">A temporary structured moment is created.</span>
             </div>
           </div>
@@ -138,7 +138,7 @@ export const WhyContinuumScreen: React.FC<WhyContinuumScreenProps> = ({ onBack }
             <span className="text-neutral-400 text-[10px]">Real-world capture</span>
           </div>
           <div className="p-2 rounded-xl bg-black/40 border border-white/5">
-            <span className="font-bold text-white block">OriginOS</span>
+            <span className="font-bold text-white block">OriginOS concept</span>
             <span className="text-neutral-400 text-[10px]">Contextual AI layer</span>
           </div>
           <div className="p-2 rounded-xl bg-black/40 border border-white/5">

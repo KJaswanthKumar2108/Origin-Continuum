@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Smartphone, Laptop, Sparkles, Check, ArrowRight, ShieldAlert } from 'lucide-react';
 import { ContinuumMoment } from '../types';
 
@@ -13,24 +13,6 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
   onProceedToOfficeKit,
   onSkipDirectlyToPC,
 }) => {
-  const [stage, setStage] = useState<'connecting' | 'ready'>('connecting');
-  const [progress, setProgress] = useState(15);
-
-  useEffect(() => {
-    const pTimer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(pTimer);
-          setStage('ready');
-          return 100;
-        }
-        return prev + 18;
-      });
-    }, 280);
-
-    return () => clearInterval(pTimer);
-  }, []);
-
   return (
     <div id="origin-connection-transition" className="flex-1 flex flex-col px-5 pt-5 pb-5 text-white bg-[#06070a] relative overflow-hidden justify-between">
       {/* Background Spatial Radiance */}
@@ -41,14 +23,14 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
       {/* Top Header */}
       <div className="relative z-10 text-center">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-800/80 border border-white/10 text-[10px] font-mono text-[#FFE600] mb-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FFE600] animate-pulse"></span>
-          <span>CROSS-DEVICE CONTINUITY</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FFE600]"></span>
+          <span>PC / OFFICE KIT CONCEPT</span>
         </div>
         <h2 className="text-[20px] font-extrabold tracking-tight text-white uppercase">
-          {stage === 'connecting' ? 'Preparing context for your PC…' : 'Context handoff prepared'}
+          Proposed context handoff
         </h2>
         <p className="text-[12px] text-neutral-400 font-medium mt-0.5">
-          Continuum context ready for your workstation
+          Interface concept only; no device connection is active.
         </p>
       </div>
 
@@ -64,7 +46,7 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
               <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block">
                 Source Device
               </span>
-              <span className="text-[14px] font-bold text-white">iQOO PHONE</span>
+              <span className="text-[14px] font-bold text-white">Phone capture</span>
             </div>
           </div>
           <span className="text-[10px] font-mono text-emerald-400 font-bold">READY</span>
@@ -72,8 +54,7 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
 
         {/* Animated Inter-Device Conduit 1 */}
         <div className="h-10 flex flex-col items-center justify-center relative my-1">
-          <div className="w-0.5 h-full bg-gradient-to-b from-white/30 via-[#FFE600] to-white/30 relative overflow-hidden">
-            <div className="w-full h-4 bg-[#FFE600] animate-flow-dash absolute"></div>
+          <div className="w-0.5 h-full bg-gradient-to-b from-white/30 via-[#FFE600] to-white/30 relative">
           </div>
           <div className="absolute w-5 h-5 rounded-full bg-neutral-950 border border-[#FFE600] flex items-center justify-center">
             <Sparkles className="w-2.5 h-2.5 text-[#FFE600] animate-spin" style={{ animationDuration: '3s' }} />
@@ -94,23 +75,16 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
                 </span>
               </div>
               <span className="text-[11px] text-neutral-300 font-medium">
-                3 actions & Friday deadline prepared
+                {moment.actions.length} tasks · {moment.deadline || 'No deadline'}
               </span>
             </div>
           </div>
-          {stage === 'ready' ? (
-            <div className="w-6 h-6 rounded-full bg-emerald-400 text-black flex items-center justify-center">
-              <Check className="w-3.5 h-3.5 stroke-[3]" />
-            </div>
-          ) : (
-            <div className="w-5 h-5 border-2 border-[#FFE600] border-t-transparent rounded-full animate-spin"></div>
-          )}
+          <span className="text-[9px] font-mono text-neutral-400">CONCEPT</span>
         </div>
 
         {/* Animated Inter-Device Conduit 2 */}
         <div className="h-10 flex flex-col items-center justify-center relative my-1">
-          <div className="w-0.5 h-full bg-gradient-to-b from-[#FFE600] to-white/30 relative overflow-hidden">
-            <div className="w-full h-4 bg-[#FFE600] animate-flow-dash absolute"></div>
+          <div className="w-0.5 h-full bg-gradient-to-b from-[#FFE600] to-white/30 relative">
           </div>
           <div className="absolute w-5 h-5 rounded-full bg-neutral-950 border border-neutral-600 flex items-center justify-center">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FFE600]"></span>
@@ -131,7 +105,7 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
             </div>
           </div>
           <span className="text-[10px] font-mono text-[#FFE600]">
-            {stage === 'ready' ? 'SYNCHRONIZED' : `${progress}%`}
+            CONCEPT
           </span>
         </div>
       </div>
@@ -143,7 +117,7 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
           onClick={onProceedToOfficeKit}
           className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE600] hover:bg-[#fff04d] text-black font-extrabold text-[15px] flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(255,230,0,0.35)] active:scale-[0.98] transition-all cursor-pointer"
         >
-          <span>Open Office Kit Bridge</span>
+          <span>Continue to PC Concept</span>
           <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
         </button>
 
@@ -152,7 +126,7 @@ export const ConnectionTransition: React.FC<ConnectionTransitionProps> = ({
           onClick={onSkipDirectlyToPC}
           className="w-full py-2 px-3 text-neutral-400 hover:text-white text-[12px] font-medium transition-colors"
         >
-          Launch PC Workspace directly →
+          Open PC concept workspace →
         </button>
       </div>
     </div>

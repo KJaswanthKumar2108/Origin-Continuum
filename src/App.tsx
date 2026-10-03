@@ -55,14 +55,29 @@ export default function App() {
   // View state
   const [currentView, setCurrentView] = useState<OSView>('home');
   const [currentTab, setCurrentTab] = useState<NavigationTab>('continuum');
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('side-by-side');
+  const [displayMode, setDisplayModeState] = useState<DisplayMode>(() => (
+    window.innerWidth < 1024 ? 'phone' : 'side-by-side'
+  ));
+  const setDisplayMode = (mode: DisplayMode) => {
+    setDisplayModeState(mode === 'side-by-side' && window.innerWidth < 1024 ? 'pc' : mode);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setDisplayModeState((mode) => mode === 'side-by-side' ? 'phone' : mode);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Scenario modal state (Requirement 2)
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false);
 
-  // Capture & Voice temporary pipeline payload
+  // Capture and text annotation pipeline payload
   const [capturedPayload, setCapturedPayload] = useState<{ imageBase64?: string; mimeType?: string; textHint?: string } | undefined>(undefined);
-  const [voicePayload, setVoicePayload] = useState<string | undefined>(undefined);
+  const [textNote, setTextNote] = useState('');
 
   // Demo mode state (60-90s guided tour)
   const [isDemoRunning, setIsDemoRunning] = useState(false);
@@ -120,8 +135,24 @@ export default function App() {
   }, [isDemoRunning, demoStepIndex, displayMode]);
 
   const startDemo = () => {
+    setMoments((current) => current.some((moment) => moment.id === SCENARIO_Q3_PRODUCT_PLAN.id)
+      ? current
+      : [SCENARIO_Q3_PRODUCT_PLAN, ...current]);
+    setSelectedMoment(SCENARIO_Q3_PRODUCT_PLAN);
     setIsDemoRunning(true);
     setDemoStepIndex(0);
+  };
+
+  const openDemoMoment = () => {
+    setMoments((current) => current.some((moment) => moment.id === SCENARIO_Q3_PRODUCT_PLAN.id)
+      ? current
+      : [SCENARIO_Q3_PRODUCT_PLAN, ...current]);
+    setSelectedMoment(SCENARIO_Q3_PRODUCT_PLAN);
+    setCapturedPayload(undefined);
+    setTextNote('');
+    setCurrentView('moment-detail');
+    setCurrentTab('continuum');
+    setDisplayMode('phone');
   };
 
   const stopDemo = () => {
@@ -187,18 +218,16 @@ export default function App() {
   };
 
   // Newly AI Understood Moment Completion
-  const handleUnderstandingComplete = (newMoment?: ContinuumMoment) => {
-    if (newMoment) {
-      const existingIdx = moments.findIndex((m) => m.id === newMoment.id);
-      let updated: ContinuumMoment[];
-      if (existingIdx >= 0) {
-        updated = moments.map((m, idx) => (idx === existingIdx ? newMoment : m));
-      } else {
-        updated = [newMoment, ...moments];
-      }
-      setMoments(updated);
-      setSelectedMoment(newMoment);
+  const handleUnderstandingComplete = (newMoment: ContinuumMoment) => {
+    const existingIdx = moments.findIndex((m) => m.id === newMoment.id);
+    let updated: ContinuumMoment[];
+    if (existingIdx >= 0) {
+      updated = moments.map((m, idx) => (idx === existingIdx ? newMoment : m));
+    } else {
+      updated = [newMoment, ...moments];
     }
+    setMoments(updated);
+    setSelectedMoment(newMoment);
     setCurrentView('moment-detail');
   };
 
@@ -214,17 +243,17 @@ export default function App() {
             recentMoment={activeMoment}
             onCaptureClick={() => {
               setCapturedPayload(undefined);
-              setVoicePayload(undefined);
+              setTextNote('');
               setCurrentView('capture');
             }}
             onContinuePC={(m) => {
               setSelectedMoment(m);
-              setCurrentView('pc-workspace');
+              setCurrentView('pc-card');
               setDisplayMode('pc');
             }}
             onContinueSideBySide={(m) => {
               setSelectedMoment(m);
-              setCurrentView('pc-workspace');
+              setCurrentView('pc-card');
               setDisplayMode('side-by-side');
             }}
             onInspectMoment={(m) => {
@@ -240,15 +269,12 @@ export default function App() {
       case 'capture':
         return (
           <CaptureScreen
-            currentMoment={activeMoment}
             onCapture={(payload) => {
               setCapturedPayload(payload);
+              setTextNote('');
               setCurrentView('voice');
             }}
-            onUseDemo={() => {
-              setCapturedPayload({ textHint: activeMoment.extractedText });
-              setCurrentView('voice');
-            }}
+            onUseDemo={openDemoMoment}
             onCancel={() => setCurrentView('home')}
           />
         );
@@ -256,11 +282,10 @@ export default function App() {
       case 'voice':
         return (
           <VoiceContextScreen
-            currentMoment={activeMoment}
-            onUnderstand={(transcript) => {
-              setVoicePayload(transcript);
-              setCurrentView('understanding');
-            }}
+            textNote={textNote}
+            onTextNoteChange={setTextNote}
+            hasCapturedImage={Boolean(capturedPayload?.imageBase64)}
+            onUnderstand={() => setCurrentView('understanding')}
             onCancel={() => setCurrentView('capture')}
           />
         );
@@ -268,10 +293,10 @@ export default function App() {
       case 'understanding':
         return (
           <UnderstandingScreen
-            currentMoment={activeMoment}
-            voiceTranscript={voicePayload}
             capturedPayload={capturedPayload}
+            textNote={textNote}
             onComplete={handleUnderstandingComplete}
+            onCancel={() => setCurrentView('voice')}
           />
         );
 
@@ -281,12 +306,12 @@ export default function App() {
             moment={activeMoment}
             onContinuePC={(m) => {
               setSelectedMoment(m);
-              setCurrentView('pc-workspace');
+              setCurrentView('pc-card');
               setDisplayMode('pc');
             }}
             onContinueSideBySide={(m) => {
               setSelectedMoment(m);
-              setCurrentView('pc-workspace');
+              setCurrentView('pc-card');
               setDisplayMode('side-by-side');
             }}
             onDelete={handleDeleteMoment}
@@ -335,7 +360,7 @@ export default function App() {
             onClearAll={handleClearAllMoments}
             onCaptureNew={() => {
               setCapturedPayload(undefined);
-              setVoicePayload(undefined);
+              setTextNote('');
               setCurrentView('capture');
             }}
           />
@@ -373,7 +398,11 @@ export default function App() {
         return (
           <HomeScreen
             recentMoment={activeMoment}
-            onCaptureClick={() => setCurrentView('capture')}
+            onCaptureClick={() => {
+              setCapturedPayload(undefined);
+              setTextNote('');
+              setCurrentView('capture');
+            }}
             onContinuePC={(m) => {
               setSelectedMoment(m);
               setCurrentView('pc-workspace');
@@ -419,7 +448,7 @@ export default function App() {
                 </span>
               </div>
               <span className="hidden md:block text-[11px] text-neutral-400 font-medium truncate">
-                iQOO 15 × HP 15 Continuum Demo • “Your context follows you.”
+                “Don’t transfer what you were doing. Transfer what you need to continue.”
               </span>
             </div>
           </div>
@@ -430,11 +459,11 @@ export default function App() {
             <button
               onClick={() => setIsScenarioModalOpen(true)}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-neutral-900 border border-white/15 hover:border-[#FFE600]/60 text-white hover:text-[#FFE600] text-[11px] sm:text-xs font-bold transition-all cursor-pointer"
-              title="Try another real-world moment scenario"
+              title="Open deterministic demo samples"
             >
               <Layers className="w-3.5 h-3.5 text-[#FFE600]" />
-              <span className="hidden sm:inline">Try Another Moment</span>
-              <span className="sm:hidden">Scenarios</span>
+              <span className="hidden sm:inline">Demo Samples</span>
+              <span className="sm:hidden">Samples</span>
             </button>
 
             {/* View Switcher */}
@@ -456,7 +485,7 @@ export default function App() {
               <button
                 id="btn-switch-side-by-side"
                 onClick={() => setDisplayMode('side-by-side')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
+                className={`hidden lg:flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer ${
                   displayMode === 'side-by-side'
                     ? 'bg-[#FFE600] text-black shadow-sm font-bold'
                     : 'text-neutral-400 hover:text-white'
@@ -489,10 +518,10 @@ export default function App() {
                 id="btn-start-demo-global"
                 onClick={startDemo}
                 className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-full bg-[#FFE600] hover:bg-[#ffe81a] text-black font-extrabold text-[11px] sm:text-xs shadow-md shadow-[#FFE600]/25 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-                title="Start 60s Guided Demo Walkthrough"
+                title="Start deterministic guided demo"
               >
                 <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black" />
-                <span className="hidden sm:inline">Start Demo (60s)</span>
+                <span className="hidden sm:inline">Guided Demo</span>
                 <span className="sm:hidden">Demo</span>
               </button>
             )}
@@ -512,7 +541,7 @@ export default function App() {
       />
 
       {/* Main Responsive Canvas Area - 100% Fit With No Outer Scroll */}
-      <main className="flex-1 min-h-0 w-full max-w-7xl mx-auto flex items-center justify-center p-2 sm:p-3 overflow-hidden">
+      <main className="flex-1 min-h-0 min-w-0 w-full max-w-7xl mx-auto flex items-center justify-center p-2 sm:p-3 overflow-hidden">
         {displayMode === 'phone' && (
           <div className="w-full h-full flex justify-center items-center overflow-hidden animate-fade-in">
             <PhoneFrame
@@ -533,7 +562,7 @@ export default function App() {
         )}
 
         {displayMode === 'pc' && (
-          <div className="w-full h-full max-w-5xl flex items-center justify-center overflow-hidden animate-fade-in py-1">
+          <div className="w-full h-full min-w-0 max-w-5xl flex items-center justify-center overflow-hidden animate-fade-in py-1">
             <LaptopFrame>
               <PCWorkspace
                 moment={activeMoment}
@@ -552,12 +581,12 @@ export default function App() {
         )}
 
         {displayMode === 'side-by-side' && (
-          <div className="w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-6 items-center justify-center overflow-hidden animate-fade-in py-1">
+          <div className="w-full h-full min-w-0 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-6 items-center justify-center overflow-hidden animate-fade-in py-1">
             {/* Left: iQOO 15 Smartphone Interface (5 cols on lg+) */}
-            <div className="lg:col-span-5 h-full min-h-0 flex flex-col items-center justify-center overflow-hidden">
+            <div className="hidden lg:flex lg:col-span-5 h-full min-h-0 min-w-0 flex-col items-center justify-center overflow-hidden">
               <div className="mb-1 text-center shrink-0">
                 <span className="text-xs font-mono uppercase tracking-widest text-[#FFE600] font-bold">
-                  Device 01: iQOO 15
+                  Phone Capture Concept
                 </span>
                 <p className="text-[10.5px] text-neutral-400">
                   Real-world capture & temporary context creation
@@ -583,23 +612,22 @@ export default function App() {
             </div>
 
             {/* Right: HP 15 Laptop Workspace Interface (7 cols on lg+) */}
-            <div className="lg:col-span-7 h-full min-h-0 flex flex-col justify-center overflow-hidden">
+            <div className="w-full min-w-0 lg:col-span-7 h-full min-h-0 flex flex-col justify-center overflow-hidden">
               <div className="mb-1 flex items-center justify-between shrink-0">
                 <div>
                   <span className="text-xs font-mono uppercase tracking-widest text-[#FFE600] font-bold">
-                    Device 02: HP 15 PC Workspace
+                    PC / Office Kit Concept
                   </span>
                   <p className="text-[10.5px] text-neutral-400">
-                    Structured context continuation without raw file transfer
+                    Structured context shown in this prototype
                   </p>
                 </div>
-                <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Continuity Bridge Active
+                <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1">
+                  Prototype concept
                 </span>
               </div>
 
-              <div className="flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
+              <div className="flex-1 min-h-0 min-w-0 w-full flex items-center justify-center overflow-hidden">
                 <LaptopFrame>
                   <PCWorkspace
                     moment={activeMoment}

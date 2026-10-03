@@ -46,13 +46,13 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
             </div>
             <div>
               <h2 className="text-[16px] sm:text-[18px] font-black tracking-tight text-white flex items-center gap-2">
-                <span>Try Another Moment</span>
+                <span>Demo Moments</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30 font-bold uppercase">
-                  5 Scenarios
+                  5 Samples
                 </span>
               </h2>
               <p className="text-[11px] sm:text-[12px] text-neutral-400">
-                Switch real-world context scenarios to preview cross-device continuity.
+                Choose a deterministic sample; samples do not call Gemini.
               </p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
                       </span>
                       {sc.id === 'scenario-q3-plan' && (
                         <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[#FFE600]/20 text-[#FFE600] font-bold border border-[#FFE600]/30">
-                          DEFAULT
+                          DEFAULT SAMPLE
                         </span>
                       )}
                     </div>

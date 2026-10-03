@@ -41,7 +41,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </h1>
             </div>
             <p className="text-[11.5px] sm:text-[12px] font-medium text-neutral-300 mt-0.5">
-              Context that follows your workflow.
+              Your Context. Your Control.
             </p>
           </div>
 
@@ -64,7 +64,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
 
-        {/* Miniature Flow Card: Capture → Understand → Remember → Continue */}
+        {/* Miniature Flow Card: Capture → Understand → Structure → Continue */}
         <div
           id="miniature-flow-card"
           className="relative w-full rounded-2xl bg-gradient-to-b from-[#14161f]/90 via-[#0e1017]/90 to-[#0a0b10]/90 border border-white/10 p-3 mb-3 shadow-lg backdrop-blur-md"
@@ -74,19 +74,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <ArrowRight className="w-2.5 h-2.5 text-[#FFE600] shrink-0" />
             <span className="text-white uppercase">Understand</span>
             <ArrowRight className="w-2.5 h-2.5 text-[#FFE600] shrink-0" />
-            <span className="text-white uppercase">Remember</span>
+            <span className="text-white uppercase">Structure</span>
             <ArrowRight className="w-2.5 h-2.5 text-[#FFE600] shrink-0" />
             <span className="text-emerald-400 uppercase font-extrabold">Continue</span>
           </div>
           <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-neutral-300 leading-snug text-center font-medium">
-            Capture a meaningful moment. Turn it into structured context. Continue where you left off.
+            Don’t transfer what you were doing. Transfer what you need to continue.
           </div>
         </div>
 
         {/* Active Continuum Moment Card */}
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[10.5px] font-mono uppercase tracking-wider text-neutral-400 font-semibold">
-            Active Continuum Moment
+            {recentMoment.isDemo ? 'Deterministic Demo Sample' : 'Active Continuum Moment'}
           </span>
           <button
             onClick={onOpenScenarios}

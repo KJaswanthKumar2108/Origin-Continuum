@@ -6,7 +6,7 @@ import {
   Sparkles,
   CheckSquare,
   ArrowLeft,
-  Mic,
+  FileText,
   Image as ImageIcon,
   Check,
   Plus,
@@ -113,7 +113,7 @@ export const ContinuumMomentScreen: React.FC<ContinuumMomentScreenProps> = ({
           <button
             onClick={() => setShowSourceModal(true)}
             className="flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/15 text-neutral-300 transition-colors cursor-pointer"
-            title="View original visual & voice source"
+            title="View original capture and text context"
           >
             <Eye className="w-3 h-3 text-sky-400" />
             <span>Verify Source</span>
@@ -155,15 +155,14 @@ export const ContinuumMomentScreen: React.FC<ContinuumMomentScreenProps> = ({
             {moment.contextSummary}
           </p>
 
-          {/* Voice Context Quote */}
-          {moment.voiceTranscript && (
+          {(moment.textNote || (moment.isDemo && moment.voiceTranscript)) && (
             <div className="mt-2 pt-2 border-t border-white/5 flex items-start gap-2 text-[11px] text-neutral-300">
-              <Mic className="w-3.5 h-3.5 text-[#FFE600] shrink-0 mt-0.5" />
+              <FileText className="w-3.5 h-3.5 text-[#FFE600] shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span className="text-[9.5px] font-mono uppercase text-neutral-400 block font-semibold">
-                  Spoken Intent
+                  {moment.isDemo ? 'Demo sample context' : 'Text annotation'}
                 </span>
-                <span className="italic text-neutral-200">“{moment.voiceTranscript}”</span>
+                <span className="text-neutral-200">{moment.textNote || moment.voiceTranscript}</span>
               </div>
             </div>
           )}

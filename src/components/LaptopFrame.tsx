@@ -14,7 +14,7 @@ export const LaptopFrame: React.FC<LaptopFrameProps> = ({
   return (
     <div
       id="hp-15-laptop-hardware-frame"
-      className={`w-full max-w-5xl h-full max-h-[min(660px,calc(100dvh-4.5rem))] mx-auto flex flex-col justify-center select-none overflow-hidden ${className}`}
+      className={`w-full min-w-0 max-w-full h-full max-h-[min(660px,calc(100dvh-4.5rem))] mx-auto flex flex-col justify-center select-none overflow-hidden ${className}`}
     >
       {/* HP 15 Natural Silver Aluminum Display Lid & Chassis */}
       <div className="flex-1 min-h-0 rounded-2xl sm:rounded-[22px] bg-gradient-to-b from-[#2e323e] via-[#1c1e27] to-[#101217] p-2 sm:p-3 border border-[#64748b]/40 shadow-[0_20px_70px_rgba(0,0,0,0.95),_0_0_0_1px_rgba(255,255,255,0.12)] flex flex-col relative overflow-hidden">
@@ -39,7 +39,7 @@ export const LaptopFrame: React.FC<LaptopFrameProps> = ({
         </div>
 
         {/* Physical 15.6" IPS Display Screen Surface */}
-        <div className="w-full flex-1 min-h-0 rounded-lg sm:rounded-xl bg-[#0c0e14] overflow-hidden flex flex-col relative border border-white/10 shadow-inner">
+        <div className="w-full min-w-0 flex-1 min-h-0 rounded-lg sm:rounded-xl bg-[#0c0e14] overflow-hidden flex flex-col relative border border-white/10 shadow-inner">
           {children}
         </div>
 

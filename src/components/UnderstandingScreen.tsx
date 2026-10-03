@@ -1,273 +1,196 @@
-import React, { useState, useEffect } from 'react';
-import { Check, Sparkles, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertCircle, ArrowLeft, CheckCircle2, LoaderCircle, RotateCcw, Sparkles } from 'lucide-react';
 import { ContinuumMoment } from '../types';
 
 interface UnderstandingScreenProps {
-  onComplete: (moment?: ContinuumMoment) => void;
-  voiceTranscript?: string;
   capturedPayload?: { imageBase64?: string; mimeType?: string; textHint?: string };
-  currentMoment?: ContinuumMoment;
+  textNote: string;
+  onComplete: (moment: ContinuumMoment) => void;
+  onCancel: () => void;
 }
 
+const processingStates = [
+  'Reading visual context…',
+  'Understanding user intent…',
+  'Extracting tasks and deadlines…',
+  'Structuring temporary context…',
+  'Continuum Moment ready',
+];
+
 export const UnderstandingScreen: React.FC<UnderstandingScreenProps> = ({
-  onComplete,
-  voiceTranscript,
   capturedPayload,
-  currentMoment,
+  textNote,
+  onComplete,
+  onCancel,
 }) => {
-  const [phase, setPhase] = useState<1 | 2 | 3>(1);
+  const [phase, setPhase] = useState(0);
   const [generatedMoment, setGeneratedMoment] = useState<ContinuumMoment | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const requestRef = useRef<{ attempt: number; promise: Promise<{ ok: boolean; data: any }> } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    let nextPhase = 0;
+    setPhase(0);
+    setGeneratedMoment(null);
+    setErrorMessage(null);
+    const phaseTimer = window.setInterval(() => {
+      nextPhase = Math.min(nextPhase + 1, 3);
+      if (isMounted) setPhase(nextPhase);
+    }, 1100);
 
-    // Trigger AI Extraction
-    const runAIEngine = async () => {
+    const runUnderstanding = async () => {
       try {
-        const res = await fetch('/api/understand-moment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageBase64: capturedPayload?.imageBase64,
-            mimeType: capturedPayload?.mimeType,
-            voiceTranscript: voiceTranscript || currentMoment?.voiceTranscript,
-            textNote: capturedPayload?.textHint,
-            scenarioHint: currentMoment?.title,
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.moment && isMounted) {
-            const finalMoment: ContinuumMoment = {
-              id: `moment-${Date.now()}`,
-              title: data.moment.title || currentMoment?.title || 'Continuum Moment',
-              timestamp: 'Captured just now',
-              createdAt: Date.now(),
-              sources: currentMoment?.sources || [
-                { type: 'whiteboard', label: 'Visual Capture' },
-                { type: 'voice', label: 'Voice Intent' },
-              ],
-              actions: data.moment.actions || currentMoment?.actions || [],
-              deadline: data.moment.deadline !== 'Not specified' ? data.moment.deadline : currentMoment?.deadline,
-              contextSummary: data.moment.contextSummary || currentMoment?.contextSummary || 'Structured context extracted from capture.',
-              voiceTranscript: voiceTranscript || currentMoment?.voiceTranscript,
-              extractedText: data.moment.extractedText || currentMoment?.extractedText,
-              entities: data.moment.entities || currentMoment?.entities,
-              decisions: data.moment.decisions || currentMoment?.decisions,
-              unresolvedQuestions: data.moment.unresolvedQuestions || currentMoment?.unresolvedQuestions,
-              suggestedNextAction: data.moment.suggestedNextAction || currentMoment?.suggestedNextAction,
-              scenarioCategory: currentMoment?.scenarioCategory || 'project',
-              visualData: currentMoment?.visualData,
-              isDemo: false,
-              isAIGenerated: true,
-            };
-            setGeneratedMoment(finalMoment);
-          }
+        let request = requestRef.current;
+        if (!request || request.attempt !== attempt) {
+          const promise = fetch('/api/understand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: capturedPayload?.imageBase64,
+              mimeType: capturedPayload?.mimeType,
+              textNote: textNote.trim(),
+            }),
+          }).then(async (response) => ({
+            ok: response.ok,
+            data: await response.json().catch(() => ({})),
+          }));
+          request = { attempt, promise };
+          requestRef.current = request;
         }
-      } catch (err: any) {
-        console.error('Error in understand API:', err);
+
+        const { ok, data } = await request.promise;
+        if (!ok || !data.success || !data.isAIGenerated || !data.moment) {
+          throw new Error(data.error || 'Gemini did not return a Continuum Moment.');
+        }
+        if (!isMounted) return;
+
+        const result = data.moment;
+        const sources: ContinuumMoment['sources'] = [];
+        if (capturedPayload?.imageBase64) sources.push({ type: 'camera', label: 'Captured image' });
+        if (textNote.trim()) sources.push({ type: 'text', label: 'Text annotation' });
+
+        const moment: ContinuumMoment = {
+          id: `moment-${Date.now()}`,
+          title: result.title,
+          timestamp: 'Captured just now',
+          createdAt: Date.now(),
+          sources,
+          actions: result.actions.map((action: any, index: number) => ({
+            id: action.id || `act-${Date.now()}-${index + 1}`,
+            title: action.title,
+            completed: Boolean(action.completed),
+            assignee: action.assignee,
+          })),
+          deadline: result.deadline || 'Not specified',
+          contextSummary: result.contextSummary,
+          textNote: textNote.trim() || undefined,
+          extractedText: result.extractedText,
+          entities: result.entities,
+          decisions: result.decisions,
+          unresolvedQuestions: result.unresolvedQuestions,
+          suggestedNextAction: result.suggestedNextAction,
+          scenarioCategory: 'project',
+          imageThumbnailUrl: capturedPayload?.imageBase64,
+          isDemo: false,
+          isAIGenerated: true,
+        };
+        setGeneratedMoment(moment);
+        setPhase(4);
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(error instanceof Error ? error.message : 'Gemini could not process this moment.');
+        }
+      } finally {
+        window.clearInterval(phaseTimer);
       }
     };
 
-    runAIEngine();
-
-    // Progression timers
-    const t1 = setTimeout(() => {
-      if (isMounted) setPhase(2);
-    }, 1100);
-
-    const t2 = setTimeout(() => {
-      if (isMounted) setPhase(3);
-    }, 2400);
-
+    runUnderstanding();
     return () => {
       isMounted = false;
-      clearTimeout(t1);
-      clearTimeout(t2);
+      window.clearInterval(phaseTimer);
     };
-  }, []);
-
-  const handleFinish = () => {
-    onComplete(generatedMoment || currentMoment);
-  };
-
-  const active = generatedMoment || currentMoment;
+  }, [attempt, capturedPayload, textNote]);
 
   return (
-    <div id="origin-understanding-screen" className="flex-1 flex flex-col px-4 sm:px-5 pt-3 pb-3 text-white bg-[#08090d] relative overflow-hidden justify-between min-h-0 select-none">
-      {/* Background Neural Glow */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#FFE600]/15 blur-3xl"></div>
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10 text-center shrink-0">
-        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-neutral-800/80 border border-white/10 text-[10.5px] font-mono text-[#FFE600] mb-1.5">
+    <div id="origin-understanding-screen" className="flex-1 flex flex-col px-4 sm:px-5 pt-3 pb-3 text-white bg-[#08090d] min-h-0">
+      <div className="text-center shrink-0">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-800 border border-white/10 text-[10px] font-mono text-[#FFE600] mb-3">
           <Sparkles className="w-3 h-3" />
-          <span>Origin Context Engine</span>
+          <span>CAPTURE → UNDERSTAND → STRUCTURE</span>
         </div>
-
-        <h1 className="text-[18px] sm:text-[20px] font-black tracking-tight text-white uppercase leading-tight">
-          {phase === 1 && 'Reading visual context…'}
-          {phase === 2 && 'Understanding Intent'}
-          {phase === 3 && 'Continuum Moment Ready'}
+        <h1 className="text-[18px] sm:text-[20px] font-black text-white leading-tight">
+          {errorMessage ? 'AI processing failed.' : processingStates[phase]}
         </h1>
-        <p className="text-[11.5px] text-neutral-400 font-medium mt-0.5 line-clamp-1">
-          {phase === 1 && 'Scanning optical capture & voice intent'}
-          {phase === 2 && 'Extracting actionable tasks, deadlines & decisions'}
-          {phase === 3 && 'Structured context ready for cross-device continuation'}
-        </p>
-
-        {/* Phase progress tracker */}
-        <div className="mt-2 flex items-center justify-between px-2.5 py-1 rounded-xl bg-black/50 border border-white/10 text-[8.5px] sm:text-[9px] font-mono font-bold tracking-tight">
-          <span className={phase >= 1 ? 'text-[#FFE600]' : 'text-neutral-500'}>RAW CAPTURE</span>
-          <span className="text-neutral-600">→</span>
-          <span className={phase >= 2 ? 'text-white' : 'text-neutral-500'}>GEMINI ENGINE</span>
-          <span className="text-neutral-600">→</span>
-          <span className={phase === 3 ? 'text-emerald-400 font-extrabold' : 'text-neutral-500'}>STRUCTURED</span>
-        </div>
       </div>
 
-      {/* Central Content */}
-      <div className="relative z-10 my-auto py-2 flex flex-col items-center w-full min-h-0 overflow-y-auto">
-        {phase === 1 && (
-          <div className="w-full max-w-[280px] flex flex-col items-center animate-fade-in space-y-3">
-            <div className="relative w-20 h-20 rounded-2xl bg-neutral-900 border-2 border-[#FFE600]/50 flex items-center justify-center shadow-[0_0_35px_rgba(255,230,0,0.2)]">
-              <div className="absolute inset-1 rounded-xl border border-[#FFE600]/20 flex items-center justify-center overflow-hidden">
-                <div className="w-full h-1 bg-gradient-to-r from-transparent via-[#FFE600] to-transparent animate-scan-beam absolute"></div>
-                <Eye className="w-8 h-8 text-[#FFE600] animate-pulse" />
+      <div className="flex-1 min-h-0 overflow-y-auto py-4">
+        {errorMessage ? (
+          <div role="alert" className="max-w-[320px] mx-auto rounded-xl border border-red-400/30 bg-red-950/30 p-4 text-center">
+            <AlertCircle className="w-6 h-6 text-red-300 mx-auto mb-2" />
+            <p className="text-[12px] text-neutral-200">{errorMessage}</p>
+            <button
+              onClick={() => setAttempt((value) => value + 1)}
+              className="mt-4 w-full py-2.5 rounded-xl bg-[#FFE600] text-black text-sm font-bold flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" /> Retry
+            </button>
+          </div>
+        ) : generatedMoment ? (
+          <div className="max-w-[320px] mx-auto space-y-3">
+            {generatedMoment.imageThumbnailUrl && (
+              <img src={generatedMoment.imageThumbnailUrl} alt="Captured source" className="w-full max-h-32 object-contain rounded-xl bg-black/30" />
+            )}
+            <div className="rounded-xl border border-[#FFE600]/50 bg-neutral-900 p-3">
+              <div className="flex items-center gap-2 text-[9px] font-mono uppercase text-emerald-300 mb-2">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Gemini result
               </div>
-            </div>
-
-            <div className="text-center space-y-0.5">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#FFE600] font-bold block">
-                STEP 1 • SENSORY OCR
-              </span>
-              <p className="text-[13px] font-bold text-white">
-                Reading visual context…
+              <h2 className="text-[16px] font-bold text-white">{generatedMoment.title}</h2>
+              <p className="text-[11px] text-neutral-300 mt-1">{generatedMoment.contextSummary}</p>
+              <div className="mt-3 space-y-1.5">
+                {generatedMoment.actions.map((action) => (
+                  <p key={action.id} className="text-[11px] text-neutral-200">□ {action.title}</p>
+                ))}
+              </div>
+              <p className="mt-3 pt-2 border-t border-white/10 text-[10px] text-neutral-300">
+                Deadline: <strong className="text-[#FFE600]">{generatedMoment.deadline}</strong>
               </p>
-              <p className="text-[11px] text-neutral-400">
-                Detecting whiteboard geometry and voice grounding
+              <p className="mt-1 text-[9px] font-mono text-neutral-500">
+                Source: {generatedMoment.sources.map((source) => source.label).join(' + ')}
               </p>
             </div>
           </div>
-        )}
-
-        {phase === 2 && (
-          <div className="w-full max-w-[300px] space-y-2 animate-fade-in">
-            <div className="text-center mb-0.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#FFE600] font-bold block">
-                STEP 2 • AI CONTEXT STRUCTURING
-              </span>
-            </div>
-
-            {/* Extracted Tasks */}
-            <div className="p-2.5 rounded-xl bg-neutral-900/90 border border-[#FFE600]/40 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#FFE600]/15 border border-[#FFE600]/30 flex items-center justify-center text-[#FFE600]">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                </div>
-                <div>
-                  <span className="text-[12px] font-bold text-white block">
-                    {active?.actions.length || 3} tasks extracted
-                  </span>
-                  <span className="text-[9.5px] text-neutral-400">Structured into actionable checklist</span>
-                </div>
-              </div>
-              <span className="text-[9px] font-mono text-[#FFE600] font-bold">READY</span>
-            </div>
-
-            {/* Deadline */}
-            <div className="p-2.5 rounded-xl bg-neutral-900/90 border border-[#FFE600]/40 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#FFE600]/15 border border-[#FFE600]/30 flex items-center justify-center text-[#FFE600]">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                </div>
-                <div>
-                  <span className="text-[12px] font-bold text-white block">Temporal Anchor</span>
-                  <span className="text-[9.5px] text-neutral-400">
-                    Deadline: {active?.deadline || 'Not specified'}
-                  </span>
-                </div>
-              </div>
-              <span className="text-[9px] font-mono text-[#FFE600] font-bold">GROUNDED</span>
-            </div>
-
-            {/* Decision / Entities */}
-            <div className="p-2.5 rounded-xl bg-neutral-900/90 border border-white/10 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                </div>
-                <div>
-                  <span className="text-[12px] font-bold text-white block">Contextual Grounding</span>
-                  <span className="text-[9.5px] text-neutral-400">
-                    {active?.title || 'Active Intent'}
-                  </span>
-                </div>
-              </div>
-              <span className="text-[9px] font-mono text-emerald-400 font-bold">ALIGNED</span>
-            </div>
-          </div>
-        )}
-
-        {phase === 3 && (
-          <div className="w-full max-w-[300px] rounded-2xl bg-gradient-to-br from-[#161822]/95 to-[#0f1118]/95 border-2 border-[#FFE600]/70 p-3.5 shadow-2xl animate-fade-in text-left space-y-2">
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[9.5px] font-mono text-neutral-400 uppercase tracking-wider block">
-                  CONTINUUM MOMENT
-                </span>
-                <h3 className="text-[15px] font-black text-white leading-tight mt-0.5">
-                  {active?.title}
-                </h3>
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#FFE600] text-black">
-                READY
-              </span>
-            </div>
-
-            <p className="text-[11.5px] text-neutral-300 leading-snug">
-              {active?.contextSummary}
-            </p>
-
-            {/* Tasks Chips Preview */}
-            <div className="space-y-1 bg-black/40 rounded-xl p-2 border border-white/5">
-              {active?.actions.slice(0, 3).map((act) => (
-                <div key={act.id} className="flex items-center gap-1.5 text-[11px] text-neutral-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FFE600] shrink-0"></span>
-                  <span className="truncate">{act.title}</span>
-                </div>
+        ) : (
+          <div className="h-full min-h-40 flex flex-col items-center justify-center gap-4 text-neutral-300">
+            <LoaderCircle className="w-9 h-9 text-[#FFE600] animate-spin" />
+            <ol className="w-full max-w-70 space-y-2 text-[11px]">
+              {processingStates.slice(0, 4).map((state, index) => (
+                <li key={state} className={index <= phase ? 'text-white' : 'text-neutral-600'}>
+                  {index < phase ? '✓' : index === phase ? '•' : '○'} {state}
+                </li>
               ))}
-            </div>
-
-            <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 pt-1 border-t border-white/10">
-              <span>Deadline: <strong className="text-[#FFE600]">{active?.deadline || 'None'}</strong></span>
-              <span className="text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Zero Hallucination</span>
-              </span>
-            </div>
+            </ol>
           </div>
         )}
       </div>
 
-      {/* Bottom Button */}
-      <div className="relative z-10 w-full pt-2 shrink-0">
-        <button
-          id="btn-view-structured-moment"
-          onClick={handleFinish}
-          className={`w-full py-3 px-4 rounded-2xl font-extrabold text-[14px] flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(255,230,0,0.3)] transition-all cursor-pointer ${
-            phase === 3
-              ? 'bg-[#FFE600] hover:bg-[#fff04d] text-black active:scale-[0.98]'
-              : 'bg-neutral-800 text-neutral-400 hover:text-white'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>{phase === 3 ? 'Inspect Continuum Moment' : 'Skip Processing'}</span>
-        </button>
+      <div className="shrink-0 pt-2">
+        {generatedMoment ? (
+          <button
+            onClick={() => onComplete(generatedMoment)}
+            className="w-full py-3 px-4 rounded-xl bg-[#FFE600] text-black font-extrabold text-[14px] flex items-center justify-center gap-2"
+          >
+            <CheckCircle2 className="w-4 h-4" /> Review Continuum Moment
+          </button>
+        ) : errorMessage ? (
+          <button onClick={onCancel} className="w-full py-2 text-[12px] text-neutral-300 flex items-center justify-center gap-1">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to context
+          </button>
+        ) : (
+          <p className="text-center text-[10px] text-neutral-500">Waiting for the real Gemini response…</p>
+        )}
       </div>
     </div>
   );
