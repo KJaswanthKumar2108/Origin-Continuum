@@ -32,7 +32,7 @@ Origin Continuum introduces a contextual intelligence layer. Rather than transfe
 ## Core Flow
 
 ```
-Capture → Understand → Remember → Continue
+Capture → Understand → Structure → Continue
 ```
 
 1. **Capture**: The user intentionally captures a meaningful physical or digital moment (e.g., meeting whiteboard, sprint plan).
