@@ -189,7 +189,7 @@ export const UnderstandingScreen: React.FC<UnderstandingScreenProps> = ({
             <ArrowLeft className="w-3.5 h-3.5" /> Back to context
           </button>
         ) : (
-          <p className="text-center text-[10px] text-neutral-500">Waiting for the real Gemini response…</p>
+          <p className="text-center text-[10px] text-neutral-500">Waiting for the real OpenRouter response…</p>
         )}
       </div>
     </div>
